@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
 
 
   s.dependency "React-Core"
-  s.dependency "gRPC-Swift"
+  s.dependency "gRPC"
 
   # Pods directory corresponding to this app's Podfile, relative to the location of this podspec.
   pods_root = 'Pods'
