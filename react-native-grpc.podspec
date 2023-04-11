@@ -15,7 +15,6 @@ Pod::Spec.new do |s|
 
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
-  s.static_framework = true
 
 
   s.dependency "React-Core"
@@ -23,4 +22,9 @@ Pod::Spec.new do |s|
 
   # Pods directory corresponding to this app's Podfile, relative to the location of this podspec.
   pods_root = 'Pods'
+
+  s.pod_target_xcconfig = {
+    # This is needed by all pods that depend on gRPC-RxLibrary:
+    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
+  }
 end
