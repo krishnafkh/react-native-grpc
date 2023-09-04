@@ -1,4 +1,4 @@
-## [1.0.6] - 2023-09-04
+## [Unreleased] - 2023-09-04
 
 ### Added
 1. Channel Creation happening from JS layer
