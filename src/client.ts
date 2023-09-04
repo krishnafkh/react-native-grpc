@@ -196,6 +196,9 @@ export class GrpcClient {
     Grpc.setResponseSizeLimit(limitInBytes);
   }
 
+  /**
+   * initiating the grpc channel from JS layer
+   * */
   initGrpcChannel() {
     Grpc.initGrpcChannel();
   }
@@ -208,20 +211,35 @@ export class GrpcClient {
     Grpc.setKeepAlive(enable, keepAliveTime, keepAliveTimeOut);
   }
 
+  /**
+   * only applicable for android
+   * @param message -> debug message
+   * */
   resetConnection(message: string): void {
     if (!this.isAndroid()) return;
     Grpc.resetConnection(message);
   }
+
+  /**
+   * only applicable for android
+   * @param enable -> show debug log in ui
+   * */
   setUiLogEnabled(enable: boolean): void {
     if (!this.isAndroid()) return;
     Grpc.setUiLogEnabled(enable);
   }
 
+  /**
+   * only applicable for android , to reset connection based on manage-channel state
+   * */
   onConnectionStateChange(): void {
     if (!this.isAndroid()) return;
     Grpc.onConnectionStateChange();
   }
 
+  /**
+   * only applicable for android , to set manage-channel to idle state
+   * */
   enterIdle(): void {
     if (!this.isAndroid()) return;
     Grpc.enterIdle();
