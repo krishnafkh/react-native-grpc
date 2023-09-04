@@ -1,31 +1,27 @@
-import { AbortController, AbortSignal } from 'abort-controller';
-import { fromByteArray, toByteArray } from 'base64-js';
-import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
-import { GrpcError } from './errors';
+import {AbortController, AbortSignal} from 'abort-controller';
+import {fromByteArray, toByteArray} from 'base64-js';
+import {NativeEventEmitter, NativeModules, Platform} from 'react-native';
+import {GrpcError} from './errors';
 import {
   GrpcServerStreamingCall,
   ServerOutputStream,
 } from './server-streaming';
-import { GrpcMetadata } from './types';
-import { GrpcUnaryCall } from './unary';
+import {GrpcMetadata} from './types';
+import {GrpcUnaryCall} from './unary';
 
 type GrpcRequestObject = {
   data: string;
 };
 
 type GrpcType = {
+
   getHost: () => Promise<string>;
   getIsInsecure: () => Promise<boolean>;
   setHost(host: string): void;
   setInsecure(insecure: boolean): void;
-  setCompression(enable: boolean, compressorName: string, limit?: string): void;
-  setKeepalive(enabled: boolean, time: number, timeout: number): void;
+  setCompression(enable: boolean, compressorName: string): void;
   setResponseSizeLimit(limitInBytes: number): void;
-  resetConnection(message: string):void;
-  setKeepAliveTime(keepAliveTime: number):void;
-  onConnectionStateChange():void;
-  setUiLogEnabled(enable:boolean):void;
-  enterIdle():void;
+  initGrpcChannel(): void;
   unaryCall(
     id: number,
     path: string,
@@ -46,6 +42,11 @@ type GrpcType = {
     requestHeaders?: GrpcMetadata
   ): Promise<void>;
   finishClientStreaming(id: number): Promise<void>;
+  resetConnection(message: string): void;
+  setKeepAlive(enable: boolean, keepAliveTime: number, keepAliveTimeOut: number): void;
+  onConnectionStateChange(): void;
+  setUiLogEnabled(enable: boolean): void;
+  enterIdle(): void;
 };
 
 type GrpcEventType = 'response' | 'error' | 'headers' | 'trailers';
@@ -56,27 +57,27 @@ type GrpcEventPayload =
     type: 'response';
     payload: string;
   } | {
-    type: 'error';
-    error: string;
-    code?: number;
-    trailers?: GrpcMetadata;
-  } | {
-    type: 'headers';
-    payload: GrpcMetadata;
-  } | {
-    type: 'trailers';
-    payload: GrpcMetadata;
-  } | {
-    type: 'status';
-    payload: number;
-  };
+  type: 'error';
+  error: string;
+  code?: number;
+  trailers?: GrpcMetadata;
+} | {
+  type: 'headers';
+  payload: GrpcMetadata;
+} | {
+  type: 'trailers';
+  payload: GrpcMetadata;
+} | {
+  type: 'status';
+  payload: number;
+};
 
 type GrpcEvent = {
   id: number;
   type: GrpcEventType;
 } & GrpcEventPayload;
 
-const { Grpc } = NativeModules as { Grpc: GrpcType };
+const {Grpc} = NativeModules as { Grpc: GrpcType };
 
 const Emitter = new NativeEventEmitter(NativeModules.Grpc);
 
@@ -145,13 +146,18 @@ function handleGrpcEvent(event: GrpcEvent) {
       case 'trailers':
         deferred.trailers?.resolve(event.payload);
         deferred.data?.notifyComplete();
+
+        delete deferredMap[event.id];
         break;
       case 'error':
         const error = new GrpcError(event.error, event.code, event.trailers);
 
+        deferred.headers?.reject(error);
+        deferred.trailers?.reject(error);
         deferred.response?.reject(error);
         deferred.data?.noitfyError(error);
 
+        delete deferredMap[event.id];
         break;
     }
   }
@@ -165,86 +171,83 @@ export class GrpcClient {
   constructor() {
     Emitter.addListener('grpc-call', handleGrpcEvent);
   }
+
   destroy() {
     Emitter.removeAllListeners('grpc-call');
   }
+
   getHost(): Promise<string> {
     return Grpc.getHost();
   }
+
   setHost(host: string): void {
     Grpc.setHost(host);
   }
+
   getInsecure(): Promise<boolean> {
     return Grpc.getIsInsecure();
   }
+
   setInsecure(insecure: boolean): void {
     Grpc.setInsecure(insecure);
   }
 
-  /**
-   * setCompression - only for Android.
-   * @param enable
-   * @param compressorName
-   * @param limit
-   */
-  setCompression(
-    enable: boolean,
-    compressorName: string,
-    limit?: number
-  ): void {
-    if (!this.isAndroid()) {
-      return;
-    }
-    Grpc.setCompression(enable, compressorName, limit?.toString());
+  setCompression(enable: boolean, compressorName: string): void {
+    Grpc.setCompression(enable, compressorName);
   }
-  setKeepalive(enabled: boolean, time: number, timeout: number): void {
-    Grpc.setKeepalive(enabled, time, timeout);
-  }
+
   setResponseSizeLimit(limitInBytes: number): void {
     Grpc.setResponseSizeLimit(limitInBytes);
   }
 
-  /**
-   * resetConnection - only for Android
-   * @param message  - to debug where we are calling 'resetConnection'
-   * */
+  /*init grpc channel*/
+  initGrpcChannel() {
+    Grpc.initGrpcChannel();
+  };
+
+  /*keep alive*/
+  setKeepAlive(enable: boolean, keepAliveTime: number, keepAliveTimeOut: number): void {
+    Grpc.setKeepAlive(enable, keepAliveTime, keepAliveTimeOut);
+  }
+
+  /*
+  * Applicable for only Android
+  * @message -> debug message
+  *
+  * */
   resetConnection(message: string): void {
-    if (!this.isAndroid()) {
-      return;
-    }
+    if (!this.isAndroid()) return;
     Grpc.resetConnection(message);
   }
-  /**
-   * setUiLogEnabled - only for Android
-   * @param enable  - to debug where we are calling current grpc connection status
-   * in ui
-   * */
+
+  /*
+  * Applicable for only Android
+  * @enable -> debug toast in Android
+  *
+  * */
   setUiLogEnabled(enable: boolean): void {
-    if (!this.isAndroid()) {
-      return;
-    }
+    if (!this.isAndroid()) return;
     Grpc.setUiLogEnabled(enable);
   }
-  /**
-   * onConnectionStateChange - only for Android
-   * grpc connection different state
-   * * */
+
+  /*
+   * Applicable for only Android
+   * reset connection on app resume based on the n/w state
+   * */
   onConnectionStateChange(): void {
-    if (!this.isAndroid()) {
-      return;
-    }
+    if (!this.isAndroid()) return;
     Grpc.onConnectionStateChange();
   }
-  /**
-   * enterIdle - only for Android
-   * set grpc connection state to idle
-   * * */
+
+  /*
+   * Applicable for only Android
+   * enterIdle -> set connection to idle
+   * */
   enterIdle(): void {
-    if (!this.isAndroid()) {
-      return;
-    }
+    if (!this.isAndroid()) return;
     Grpc.enterIdle();
   }
+
 
   unaryCall(
     method: string,
@@ -292,6 +295,7 @@ export class GrpcClient {
 
     return call;
   }
+
   serverStreamCall(
     method: string,
     data: Uint8Array,
@@ -340,12 +344,9 @@ export class GrpcClient {
     return call;
   }
 
-
-
   private isAndroid(): Boolean {
-    return Platform.OS == 'android';
+    return Platform.OS === 'android';
   }
-
 }
 
-export { Grpc };
+export {Grpc};
