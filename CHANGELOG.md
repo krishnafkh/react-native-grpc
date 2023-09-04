@@ -1,5 +1,24 @@
 # Changelog
 
+## [Unreleased] - 2023-09-04
+
+### Added
+
+LINT FIX
+
+## [1.0.4] - 2023-04-12
+
+### Added
+
+Add option to configure keepalive
+
+
+## [1.0.3] - 2023-04-12
+
+### Added
+
+Reverted swift dependency for ios pods
+
 ## [1.0.0-6] - 2023-01-13
 
 ### Added

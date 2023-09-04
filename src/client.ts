@@ -1,13 +1,13 @@
-import {AbortController, AbortSignal} from 'abort-controller';
-import {fromByteArray, toByteArray} from 'base64-js';
+import { AbortController, AbortSignal } from 'abort-controller';
+import { fromByteArray, toByteArray } from 'base64-js';
 import {NativeEventEmitter, NativeModules, Platform} from 'react-native';
-import {GrpcError} from './errors';
+import { GrpcError } from './errors';
 import {
   GrpcServerStreamingCall,
   ServerOutputStream,
 } from './server-streaming';
-import {GrpcMetadata} from './types';
-import {GrpcUnaryCall} from './unary';
+import { GrpcMetadata } from './types';
+import { GrpcUnaryCall } from './unary';
 
 type GrpcRequestObject = {
   data: string;
@@ -42,11 +42,11 @@ type GrpcType = {
     requestHeaders?: GrpcMetadata
   ): Promise<void>;
   finishClientStreaming(id: number): Promise<void>;
-  resetConnection(message: string): void;
-  setKeepAlive(enable: boolean, keepAliveTime: number, keepAliveTimeOut: number): void;
-  onConnectionStateChange(): void;
-  setUiLogEnabled(enable: boolean): void;
-  enterIdle(): void;
+  resetConnection(message: string):void;
+  setKeepAlive(enable : boolean,keepAliveTime: number,keepAliveTimeOut: number):void;
+  onConnectionStateChange():void;
+  setUiLogEnabled(enable:boolean):void;
+  enterIdle():void;
 };
 
 type GrpcEventType = 'response' | 'error' | 'headers' | 'trailers';
@@ -77,7 +77,7 @@ type GrpcEvent = {
   type: GrpcEventType;
 } & GrpcEventPayload;
 
-const {Grpc} = NativeModules as { Grpc: GrpcType };
+const { Grpc } = NativeModules as { Grpc: GrpcType };
 
 const Emitter = new NativeEventEmitter(NativeModules.Grpc);
 
@@ -171,80 +171,52 @@ export class GrpcClient {
   constructor() {
     Emitter.addListener('grpc-call', handleGrpcEvent);
   }
-
   destroy() {
     Emitter.removeAllListeners('grpc-call');
   }
-
   getHost(): Promise<string> {
     return Grpc.getHost();
   }
-
   setHost(host: string): void {
     Grpc.setHost(host);
   }
-
   getInsecure(): Promise<boolean> {
     return Grpc.getIsInsecure();
   }
-
   setInsecure(insecure: boolean): void {
     Grpc.setInsecure(insecure);
   }
-
   setCompression(enable: boolean, compressorName: string): void {
     Grpc.setCompression(enable, compressorName);
   }
-
   setResponseSizeLimit(limitInBytes: number): void {
     Grpc.setResponseSizeLimit(limitInBytes);
   }
 
-  /*init grpc channel*/
-  initGrpcChannel() {
+  initGrpcChannel(){
     Grpc.initGrpcChannel();
   };
 
-  /*keep alive*/
-  setKeepAlive(enable: boolean, keepAliveTime: number, keepAliveTimeOut: number): void {
-    Grpc.setKeepAlive(enable, keepAliveTime, keepAliveTimeOut);
+  setKeepAlive(enable : boolean,keepAliveTime: number,keepAliveTimeOut: number): void {
+    Grpc.setKeepAlive(enable,keepAliveTime,keepAliveTimeOut);
   }
 
-  /*
-  * Applicable for only Android
-  * @message -> debug message
-  *
-  * */
   resetConnection(message: string): void {
-    if (!this.isAndroid()) return;
+    if(!this.isAndroid()) return;
     Grpc.resetConnection(message);
   }
-
-  /*
-  * Applicable for only Android
-  * @enable -> debug toast in Android
-  *
-  * */
   setUiLogEnabled(enable: boolean): void {
-    if (!this.isAndroid()) return;
+    if(!this.isAndroid()) return;
     Grpc.setUiLogEnabled(enable);
   }
 
-  /*
-   * Applicable for only Android
-   * reset connection on app resume based on the n/w state
-   * */
   onConnectionStateChange(): void {
-    if (!this.isAndroid()) return;
+    if(!this.isAndroid()) return;
     Grpc.onConnectionStateChange();
   }
 
-  /*
-   * Applicable for only Android
-   * enterIdle -> set connection to idle
-   * */
   enterIdle(): void {
-    if (!this.isAndroid()) return;
+    if(!this.isAndroid()) return;
     Grpc.enterIdle();
   }
 
@@ -295,7 +267,6 @@ export class GrpcClient {
 
     return call;
   }
-
   serverStreamCall(
     method: string,
     data: Uint8Array,
@@ -344,9 +315,9 @@ export class GrpcClient {
     return call;
   }
 
-  private isAndroid(): Boolean {
+  private isAndroid() : Boolean {
     return Platform.OS === 'android';
   }
 }
 
-export {Grpc};
+export { Grpc };
