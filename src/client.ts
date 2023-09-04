@@ -192,7 +192,7 @@ export class GrpcClient {
     compressorName: string,
     limit?: number
   ): void {
-    if (this.isAndroid()) {
+    if (!this.isAndroid()) {
       return;
     }
     Grpc.setCompression(enable, compressorName, limit?.toString());
@@ -209,7 +209,7 @@ export class GrpcClient {
    * @param message  - to debug where we are calling 'resetConnection'
    * */
   resetConnection(message: string): void {
-    if (this.isAndroid()) {
+    if (!this.isAndroid()) {
       return;
     }
     Grpc.resetConnection(message);
@@ -220,7 +220,7 @@ export class GrpcClient {
    * in ui
    * */
   setUiLogEnabled(enable: boolean): void {
-    if (this.isAndroid()) {
+    if (!this.isAndroid()) {
       return;
     }
     Grpc.setUiLogEnabled(enable);
@@ -230,7 +230,7 @@ export class GrpcClient {
    * grpc connection different state
    * * */
   onConnectionStateChange(): void {
-    if (this.isAndroid()) {
+    if (!this.isAndroid()) {
       return;
     }
     Grpc.onConnectionStateChange();
@@ -240,7 +240,7 @@ export class GrpcClient {
    * set grpc connection state to idle
    * * */
   enterIdle(): void {
-    if (this.isAndroid()) {
+    if (!this.isAndroid()) {
       return;
     }
     Grpc.enterIdle();
