@@ -204,26 +204,41 @@ export class GrpcClient {
     Grpc.setResponseSizeLimit(limitInBytes);
   }
 
+  /**
+   * resetConnection - only for Android
+   * @param message  - to debug where we are calling 'resetConnection'
+   * */
   resetConnection(message: string): void {
     if (this.isAndroid()) {
       return;
     }
     Grpc.resetConnection(message);
   }
+  /**
+   * setUiLogEnabled - only for Android
+   * @param enable  - to debug where we are calling current grpc connection status
+   * in ui
+   * */
   setUiLogEnabled(enable: boolean): void {
     if (this.isAndroid()) {
       return;
     }
     Grpc.setUiLogEnabled(enable);
   }
-
+  /**
+   * onConnectionStateChange - only for Android
+   * grpc connection different state
+   * * */
   onConnectionStateChange(): void {
     if (this.isAndroid()) {
       return;
     }
     Grpc.onConnectionStateChange();
   }
-
+  /**
+   * enterIdle - only for Android
+   * set grpc connection state to idle
+   * * */
   enterIdle(): void {
     if (this.isAndroid()) {
       return;
